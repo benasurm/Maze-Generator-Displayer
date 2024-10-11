@@ -128,7 +128,6 @@ void VisitRandomNodes(std::vector<std::vector<usInt>> &node_arr,
     Position curr_pos, next_pos;
     curr_pos.x = start.x;
     curr_pos.y = start.y;
-    //node_arr[curr_pos.y][curr_pos.x] = TOP;
     if(start.y == 0)
     {
         node_arr[curr_pos.y][curr_pos.x] = TOP;
@@ -187,7 +186,6 @@ void VisitRandomNodes(std::vector<std::vector<usInt>> &node_arr,
             }
         }
     }
-    if(visit_count == total_cells) std::cout << "should have visited all" << std::endl;
 }
 
 void PrintMazeToFile(std::vector<std::vector<usInt>> &node_arr)
