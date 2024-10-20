@@ -1,7 +1,6 @@
 #pragma once
 
 #include <wx/wx.h>
-#include <wx/log.h>
 #include "MazeField.h"
 
 class MazePanel : public wxPanel
@@ -19,6 +18,7 @@ private:
 
 	// Private methods
 	void RepaintMaze(wxPaintEvent& event);
-	void DrawWallsInCell(wxPaintDC* canvas, int wall_value);
+	void DrawWallsInCell(wxPaintDC* canvas, wxPoint* start_point,
+		wxPoint* from, wxPoint* to, int wall_value, int cell_size, int border_size, int x, int y);
 };
 
