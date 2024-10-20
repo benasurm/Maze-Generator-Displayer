@@ -9,22 +9,20 @@ MazeField::MazeField(const uint32_t maze_size)
 {
     SetNewField(node_arr, 0, maze_size);
     SetNewField(wall_arr, 15, maze_size);
-    start = new wxPoint(0, 0);
-    end = new wxPoint(0, 0);
 }
 
 uint32_t MazeField::GetSize()
 {
-	return node_arr.size();
+    return node_arr.size();
 }
 
-int MazeField::GetPos(wxPoint* to_get)
+int MazeField::GetPos(Position& to_get)
 {
-    if (AreCoordsInBounds(to_get)) return wall_arr[to_get->y][to_get->x];
+    if (AreCoordsInBounds(to_get)) return wall_arr[to_get.y][to_get.x];
     return 0;
 }
 
-void MazeField::SetNewField(std::vector<std::vector<int>> &arr, int value_to_set, 
+void MazeField::SetNewField(std::vector<std::vector<int>>& arr, int value_to_set,
     const uint32_t maze_size)
 {
     arr.clear();
@@ -41,15 +39,14 @@ void MazeField::GenerateRandMaze()
 
 void MazeField::ComputeWallsToDraw()
 {
-    wxPoint* curr_pos = new wxPoint(0, 0);
-    wxPoint* next_pos = new wxPoint(0, 0);
+    Position curr_pos, next_pos;
     int opp_dir;
     for (uint32_t y = 0; y < node_arr.size(); y++)
     {
         for (uint32_t x = 0; x < node_arr.size(); x++)
         {
-            curr_pos->x = x;
-            curr_pos->y = y;
+            curr_pos.x = x;
+            curr_pos.y = y;
             wall_arr[y][x] -= 1 << (node_arr[y][x] - 1);
             for (int i = 1; i <= 4; i++)
             {
@@ -59,7 +56,7 @@ void MazeField::ComputeWallsToDraw()
                     if (AreCoordsInBounds(next_pos))
                     {
                         opp_dir = GetOppositeDir(i);
-                        if (opp_dir == node_arr[next_pos->y][next_pos->x])
+                        if (opp_dir == node_arr[next_pos.y][next_pos.x])
                         {
                             wall_arr[y][x] -= 1 << (i - 1);
                         }
@@ -91,30 +88,30 @@ void MazeField::InitRandGenObj(int start, int end)
     dis.param(std::uniform_int_distribution<int>::param_type(start, end));
 }
 
-void MazeField::SetRandEdgePos(int dir, wxPoint* pos)
+void MazeField::SetRandEdgePos(int dir, Position& pos)
 {
     std::mt19937 gen(rand());
     InitRandGenObj(1, node_arr.size());
     switch (dir)
     {
-        case TOP:
-            pos->x = dis(gen) - 1;
-            pos->y = 0;
-            break;
-        case DOWN:
-            pos->x = dis(gen) - 1;
-            pos->y = node_arr.size() - 1;
-            break;
-        case LEFT:
-            pos->x = 0;
-            pos->y = dis(gen) - 1;
-            break;
-        case RIGHT:
-            pos->x = node_arr.size() - 1;
-            pos->y = dis(gen) - 1;
-            break;
-        default:
-            break;
+    case TOP:
+        pos.x = dis(gen) - 1;
+        pos.y = 0;
+        break;
+    case DOWN:
+        pos.x = dis(gen) - 1;
+        pos.y = node_arr.size() - 1;
+        break;
+    case LEFT:
+        pos.x = 0;
+        pos.y = dis(gen) - 1;
+        break;
+    case RIGHT:
+        pos.x = node_arr.size() - 1;
+        pos.y = dis(gen) - 1;
+        break;
+    default:
+        break;
     }
 }
 
@@ -142,28 +139,28 @@ int MazeField::GetOppositeDir(int dir)
     return res;
 }
 
-void MazeField::ComputeNextCoords(wxPoint* curr_coords, wxPoint* next_coords, int dir)
+void MazeField::ComputeNextCoords(Position& curr_coords, Position& next_coords, int dir)
 {
     int pos_change = 1;
     if (dir == TOP || dir == LEFT)
         pos_change = -1;
 
-    next_coords->x = curr_coords->x;
-    next_coords->y = curr_coords->y;
-    if (dir == TOP || dir == DOWN) next_coords->y += pos_change;
-    else if (dir == LEFT || dir == RIGHT) next_coords->x += pos_change;
+    next_coords.x = curr_coords.x;
+    next_coords.y = curr_coords.y;
+    if (dir == TOP || dir == DOWN) next_coords.y += pos_change;
+    else if (dir == LEFT || dir == RIGHT) next_coords.x += pos_change;
 }
 
-bool MazeField::AreCoordsInBounds(wxPoint* coords)
+bool MazeField::AreCoordsInBounds(Position& coords)
 {
-    return (coords->x >= 0 && coords->x < node_arr.size())
-        && (coords->y >= 0 && coords->y < node_arr.size());
+    return (coords.x >= 0 && coords.x < node_arr.size())
+        && (coords.y >= 0 && coords.y < node_arr.size());
 }
 
-int MazeField::GetAdjacentCount(wxPoint* coords)
+int MazeField::GetAdjacentCount(Position& coords)
 {
-    if (coords->y == 0 || coords->x == 0
-        || coords->y == node_arr.size() - 1 || coords->x == node_arr.size() - 1)
+    if (coords.y == 0 || coords.x == 0
+        || coords.y == node_arr.size() - 1 || coords.x == node_arr.size() - 1)
     {
         return 2;
     }
@@ -177,30 +174,31 @@ void MazeField::VisitRandomNodes()
     int opp_dir;
     bool any_adj;
     bool end_reach = false;
-    wxPoint* curr_pos = new wxPoint(start->x, start->y);
-    wxPoint* next_pos = new wxPoint(0, 0);
-    if (start->y == 0)
+    Position curr_pos, next_pos;
+    curr_pos.x = start.x;
+    curr_pos.y = start.y;
+    if (start.y == 0)
     {
-        node_arr[curr_pos->y][curr_pos->x] = TOP;
+        node_arr[curr_pos.y][curr_pos.x] = TOP;
     }
-    else if (start->y == node_arr.size() - 1)
+    else if (start.y == node_arr.size() - 1)
     {
-        node_arr[curr_pos->y][curr_pos->x] = DOWN;
+        node_arr[curr_pos.y][curr_pos.x] = DOWN;
     }
-    else if (start->x == 0)
+    else if (start.x == 0)
     {
-        node_arr[curr_pos->y][curr_pos->x] = LEFT;
+        node_arr[curr_pos.y][curr_pos.x] = LEFT;
     }
-    else if (start->x == node_arr.size() - 1)
+    else if (start.x == node_arr.size() - 1)
     {
-        node_arr[curr_pos->y][curr_pos->x] = RIGHT;
+        node_arr[curr_pos.y][curr_pos.x] = RIGHT;
     }
 
     while (visit_count < total_cells)
     {
         if (!end_reach)
         {
-            if (curr_pos->x == end->x && curr_pos->y == end->y)
+            if (curr_pos.x == end.x && curr_pos.y == end.y)
             {
                 end_reach = true;
             }
@@ -209,16 +207,16 @@ void MazeField::VisitRandomNodes()
         ShuffleVisitOrder(to_shuffle, 4);
         any_adj = false;
         for (int i = 0; i < 4; i++)
-        {   
+        {
             ComputeNextCoords(curr_pos, next_pos, to_shuffle[i]);
             if (AreCoordsInBounds(next_pos) &&
-                node_arr[next_pos->y][next_pos->x] == 0)
+                node_arr[next_pos.y][next_pos.x] == 0)
             {
                 any_adj = true;
                 opp_dir = GetOppositeDir(to_shuffle[i]);
-                curr_pos->x = next_pos->x;
-                curr_pos->y = next_pos->y;
-                node_arr[curr_pos->y][curr_pos->x] = opp_dir;
+                curr_pos.x = next_pos.x;
+                curr_pos.y = next_pos.y;
+                node_arr[curr_pos.y][curr_pos.x] = opp_dir;
                 visit_count++;
                 break;
             }
@@ -226,16 +224,15 @@ void MazeField::VisitRandomNodes()
         // Return back if all neighbours are visited
         if (!any_adj)
         {
-            if (curr_pos->y == start->y && curr_pos->x == start->x) break;
-            int from_dir = node_arr[curr_pos->y][curr_pos->x];
+            if (curr_pos.y == start.y && curr_pos.x == start.x) break;
+            int from_dir = node_arr[curr_pos.y][curr_pos.x];
             ComputeNextCoords(curr_pos, next_pos, from_dir);
             if (AreCoordsInBounds(next_pos))
             {
-                curr_pos->x = next_pos->x;
-                curr_pos->y = next_pos->y;
+                curr_pos.x = next_pos.x;
+                curr_pos.y = next_pos.y;
                 if (!end_reach) path_to_end.pop();
             }
         }
     }
 }
-
