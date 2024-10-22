@@ -22,19 +22,19 @@ int MazeField::GetPos(Position& to_get)
     return 0;
 }
 
-void MazeField::SetNewField(std::vector<std::vector<int>>& arr, int value_to_set,
-    const uint32_t maze_size)
-{
-    arr.clear();
-    arr.resize(maze_size);
-    InitArr(arr, value_to_set);
-}
 
 void MazeField::GenerateRandMaze()
 {
     srand(time(0));
     SetStartEndPos();
     VisitRandomNodes();
+}
+
+void MazeField::SetNewMaze(const uint32_t maze_size)
+{
+    SetNewField(node_arr, 0, maze_size);
+    SetNewField(wall_arr, 15, maze_size);
+    while (!path_to_end.empty()) path_to_end.pop();
 }
 
 void MazeField::ComputeWallsToDraw()
@@ -61,6 +61,10 @@ void MazeField::ComputeWallsToDraw()
                             wall_arr[y][x] -= 1 << (i - 1);
                         }
                     }
+                    else if (curr_pos.Equals(end))
+                    {
+                        RemoveEndPointWalls(end);
+                    }
                 }
             }
         }
@@ -69,10 +73,16 @@ void MazeField::ComputeWallsToDraw()
 
 // Private method implementations
 
-void MazeField::SetNewMaze(const uint32_t maze_size)
+void MazeField::SetNewField(std::vector<std::vector<int>>& arr, int value_to_set,
+    const uint32_t maze_size)
 {
-    SetNewField(node_arr, 0, maze_size);
-    SetNewField(wall_arr, 15, maze_size);
+    for (uint32_t i = 0; i < arr.size(); i++)
+    {
+        arr[i].clear();
+    }
+    arr.clear();
+    arr.resize(maze_size);
+    InitArr(arr, value_to_set);
 }
 
 void MazeField::InitArr(std::vector<std::vector<int>>& arr, int value_to_set)
@@ -234,5 +244,31 @@ void MazeField::VisitRandomNodes()
                 if (!end_reach) path_to_end.pop();
             }
         }
+    }
+}
+
+void MazeField::RemoveEndPointWalls(Position& end_point)
+{
+    int x = end_point.x;
+    int y = end_point.y;
+    if (y == 0)
+    {
+        if(wall_arr[y][x] >= 1 << (TOP - 1))
+            wall_arr[y][x] -= 1 << (TOP - 1);
+    }
+    else if (y == GetSize() - 1)
+    {
+        if (wall_arr[y][x] >= 1 << (DOWN - 1))
+            wall_arr[y][x] -= 1 << (DOWN - 1);
+    }
+    else if (x == 0)
+    {
+        if (wall_arr[y][x] >= 1 << (LEFT - 1))
+            wall_arr[y][x] -= 1 << (LEFT - 1);
+    }
+    else if (x == GetSize() - 1)
+    {
+        if (wall_arr[y][x] >= 1 << (RIGHT - 1))
+            wall_arr[y][x] -= 1 << (RIGHT - 1);
     }
 }

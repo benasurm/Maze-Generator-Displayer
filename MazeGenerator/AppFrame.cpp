@@ -23,10 +23,10 @@ AppFrame::AppFrame(const wxString& title):
 	maze_panel = new MazePanel(this, maze_field);
 
 	value_spin_label =
-		new wxStaticText(app_panel, wxID_ANY, "Select maze side length", wxPoint(50, 80), wxSize(-1, 20));
+		new wxStaticText(app_panel, wxID_ANY, "Select maze side length", wxPoint(50, 80), wxSize(-1, 40));
 	value_spin_label->SetFont(this->GetFont().Scale(1.5));
 
-	size_spin_ctrl = new wxSpinCtrl(app_panel, wxID_ANY, "", wxPoint(50, 120), wxSize(100, 30));
+	size_spin_ctrl = new wxSpinCtrl(app_panel, wxID_ANY, "", wxPoint(50, 120), wxSize(100, 40));
 	size_spin_ctrl->SetMin(MIN_MAZE_SIZE);
 	size_spin_ctrl->SetMax(MAX_MAZE_SIZE);
 	size_spin_ctrl->SetValue(DEF_MAZE_SIZE);

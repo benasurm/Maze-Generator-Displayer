@@ -14,6 +14,11 @@
 struct Position
 {
     uint32_t x, y;
+
+    bool Equals(Position& to_comp)
+    {
+        return x == to_comp.x && y == to_comp.y;
+    }
 };
 
 class MazeField
@@ -51,4 +56,5 @@ private:
     bool AreCoordsInBounds(Position& coords);
     int GetAdjacentCount(Position& coords);
     void VisitRandomNodes();
+    void RemoveEndPointWalls(Position& end_point);
 };
