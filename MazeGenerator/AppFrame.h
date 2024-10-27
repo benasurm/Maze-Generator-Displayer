@@ -11,7 +11,8 @@
 enum custom_ids
 {
 	GENERATE_BUTTON_ID = 2,
-	SHOW_SOLUTION_ID = 3
+	SHOW_SOLUTION_ID = 3,
+	CENTER_MAZE_ID = 4
 };
 
 class AppFrame : public wxFrame
@@ -24,10 +25,12 @@ public:
 	wxStaticText* value_spin_label;
 	wxButton* gen_button;
 	wxButton* solution_button;
+	wxButton* center_button;
 	MazePanel* maze_panel;
 private:
 	MazeField* maze_field;
 
 	void OnGenerateButtonClick(wxCommandEvent &event);
+	void OnCenterButtonClick(wxCommandEvent& event);
 	wxDECLARE_EVENT_TABLE();
 };

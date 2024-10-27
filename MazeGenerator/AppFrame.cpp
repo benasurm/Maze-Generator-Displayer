@@ -6,6 +6,7 @@
 
 wxBEGIN_EVENT_TABLE(AppFrame, wxFrame)
 	EVT_BUTTON(GENERATE_BUTTON_ID, AppFrame::OnGenerateButtonClick)
+	EVT_BUTTON(CENTER_MAZE_ID, AppFrame::OnCenterButtonClick)
 wxEND_EVENT_TABLE()
 
 // Public method implementations
@@ -34,7 +35,9 @@ AppFrame::AppFrame(const wxString& title):
 
 	gen_button = new wxButton(app_panel, GENERATE_BUTTON_ID, "Generate new maze", wxPoint(50, 180), wxSize(200, 30));
 	solution_button = new wxButton(app_panel, SHOW_SOLUTION_ID, "Show solution", wxPoint(50, 220), wxSize(200, 30));
+	center_button = new wxButton(app_panel, CENTER_MAZE_ID, "Center maze", wxPoint(50, 260), wxSize(200, 30));
 	solution_button->Enable(false);
+	center_button->Enable(false);
 }
 
 // Private method implementations
@@ -45,5 +48,11 @@ void AppFrame::OnGenerateButtonClick(wxCommandEvent& event)
 	maze_field->SetNewMaze(spin_value);
 	maze_field->GenerateRandMaze();
 	maze_field->ComputeWallsToDraw();
-	maze_panel->SetCanvas(true);
+	maze_panel->SetCanvas(true, true);
+	center_button->Enable(true);
+}
+
+void AppFrame::OnCenterButtonClick(wxCommandEvent& event)
+{
+	maze_panel->SetCanvas(true, true);
 }
