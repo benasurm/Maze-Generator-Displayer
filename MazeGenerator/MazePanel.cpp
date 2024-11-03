@@ -71,7 +71,11 @@ void MazePanel::RepaintMaze(wxPaintEvent& event)
 	wxPoint top_left, bot_right;
 	top_left.x = top_left.y = 0;
 	bot_right.x = bot_right.y = 0;
-	
+
+	wxPoint box_top_left_pos;
+	box_top_left_pos.x = (cursor_offset.x - viewport_size / 2);
+	box_top_left_pos.y = (cursor_offset.y - viewport_size / 2);
+
 	for (uint32_t y = 0; y < maze_field->GetSize(); y++)
 	{
 		temp.y = y;
@@ -86,36 +90,9 @@ void MazePanel::RepaintMaze(wxPaintEvent& event)
 			bot_right.x = top_left.x + cell_size;
 			bot_right.y = top_left.y + cell_size;
 
-			wxPoint from, to;
-			wxPoint box_top_left_pos;
-			box_top_left_pos.x = (cursor_offset.x - viewport_size / 2);
-			box_top_left_pos.y = (cursor_offset.y - viewport_size / 2);
-
-			wxPoint top_right = top_left;
-			top_right.x = bot_right.x;
-			wxPoint bot_left = bot_right;
-			bot_left.x = top_left.x;
-
-			if ((wall_value & (1 << (PATH_CELL - 1)))
-				&& IsAnyPointInBox(top_left, top_right, bot_left, bot_right) && show_solution)
-			{
-				from.x = std::max(cursor_offset.x - viewport_size / 2, top_left.x)
-					- box_top_left_pos.x + start_point.x;
-				from.y = std::max(cursor_offset.y - viewport_size / 2, top_left.y)
-					- box_top_left_pos.y + start_point.y;
-
-				to.x = std::min(cursor_offset.x + viewport_size / 2, bot_right.x)
-					- box_top_left_pos.x + start_point.x;
-				to.y = std::min(cursor_offset.y + viewport_size / 2, bot_right.y)
-					- box_top_left_pos.y + start_point.y;
-
-				canvas.SetBrush(*wxGREEN_BRUSH);
-				canvas.SetPen(*wxTRANSPARENT_PEN);
-				canvas.DrawRectangle(from.x, from.y, to.x - from.x, to.y - from.y);
-			}
+			DrawPathCell(canvas, top_left, bot_right, wall_value, temp, cell_size, box_top_left_pos);
 		}
 	}
-
 	for (uint32_t y = 0; y < maze_field->GetSize(); y++)
 	{
 		temp.y = y;
@@ -130,19 +107,15 @@ void MazePanel::RepaintMaze(wxPaintEvent& event)
 			bot_right.x = top_left.x + cell_size;
 			bot_right.y = top_left.y + cell_size;
 
-			DrawWallsInCell(canvas, top_left, bot_right, wall_value, temp, cell_size);
+			DrawWallsInCell(canvas, top_left, bot_right, wall_value, temp, cell_size, box_top_left_pos);
 		}
 	}
 }
 
 void MazePanel::DrawWallsInCell(wxAutoBufferedPaintDC& canvas, wxPoint& top_left,
-	wxPoint& bot_right, int wall_value, Position& temp, int cell_size)
+	wxPoint& bot_right, int wall_value, Position& temp, int cell_size, wxPoint& box_top_left_pos)
 {
 	wxPoint from, to;
-	wxPoint box_top_left_pos;
-	box_top_left_pos.x = (cursor_offset.x - viewport_size / 2);
-	box_top_left_pos.y = (cursor_offset.y - viewport_size / 2);
-
 	canvas.SetPen(wxPen(wxColor(149, 0, 255), cell_size * cell_brd_ratio));
 	if ((wall_value & (1 << (RIGHT - 1)))
 		&& IsInBox(bot_right))
@@ -195,6 +168,35 @@ void MazePanel::DrawWallsInCell(wxAutoBufferedPaintDC& canvas, wxPoint& top_left
 		to.y = from.y;
 
 		canvas.DrawLine(from, to);
+	}
+}
+
+void MazePanel::DrawPathCell(wxAutoBufferedPaintDC& canvas, wxPoint& top_left,
+	wxPoint& bot_right, int wall_value, Position& temp, int cell_size, wxPoint& box_top_left_pos)
+{
+	wxPoint from, to;
+	wxPoint top_right = top_left;
+	top_right.x = bot_right.x;
+	wxPoint bot_left = bot_right;
+	bot_left.x = top_left.x;
+
+	canvas.SetBrush(*wxGREEN_BRUSH);
+	canvas.SetPen(*wxTRANSPARENT_PEN);
+
+	if ((wall_value & (1 << (PATH_CELL - 1)))
+		&& IsAnyPointInBox(top_left, top_right, bot_left, bot_right) && show_solution)
+	{
+		from.x = std::max(cursor_offset.x - viewport_size / 2, top_left.x)
+			- box_top_left_pos.x + start_point.x;
+		from.y = std::max(cursor_offset.y - viewport_size / 2, top_left.y)
+			- box_top_left_pos.y + start_point.y;
+
+		to.x = std::min(cursor_offset.x + viewport_size / 2, bot_right.x)
+			- box_top_left_pos.x + start_point.x;
+		to.y = std::min(cursor_offset.y + viewport_size / 2, bot_right.y)
+			- box_top_left_pos.y + start_point.y;
+
+		canvas.DrawRectangle(from.x, from.y, to.x - from.x, to.y - from.y);
 	}
 }
 

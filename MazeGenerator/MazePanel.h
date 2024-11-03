@@ -39,8 +39,10 @@ private:
 	
 	// Drawing methods
 	void RepaintMaze(wxPaintEvent& event);
+	void DrawPathCell(wxAutoBufferedPaintDC& canvas, wxPoint& top_left,
+		wxPoint& bot_right, int wall_value, Position& temp, int cell_size, wxPoint& box_top_left_pos);
 	void DrawWallsInCell(wxAutoBufferedPaintDC& canvas, wxPoint& top_left,
-		wxPoint& bot_right, int wall_value, Position& temp, int cell_size);
+		wxPoint& bot_right, int wall_value, Position& temp, int cell_size, wxPoint& box_top_left_pos);
 	void ClearCanvas(wxAutoBufferedPaintDC& canvas);
 	
 	// Event methods
