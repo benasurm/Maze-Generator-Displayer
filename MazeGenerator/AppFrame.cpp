@@ -6,6 +6,7 @@
 
 wxBEGIN_EVENT_TABLE(AppFrame, wxFrame)
 	EVT_BUTTON(GENERATE_BUTTON_ID, AppFrame::OnGenerateButtonClick)
+	EVT_BUTTON(SHOW_SOLUTION_ID, AppFrame::OnSolutionButtonClick)
 	EVT_BUTTON(CENTER_MAZE_ID, AppFrame::OnCenterButtonClick)
 wxEND_EVENT_TABLE()
 
@@ -47,9 +48,27 @@ void AppFrame::OnGenerateButtonClick(wxCommandEvent& event)
 	uint32_t spin_value = size_spin_ctrl->GetValue();
 	maze_field->SetNewMaze(spin_value);
 	maze_field->GenerateRandMaze();
-	maze_field->ComputeWallsToDraw();
+	maze_field->ComputeObjsToDraw();
+	if(maze_panel->GetSolutionState()) maze_panel->ToggleSolutionState();
+	solution_button->SetLabel("Show solution");
 	maze_panel->SetCanvas(true, true);
+	solution_button->Enable(true);
 	center_button->Enable(true);
+}
+
+void AppFrame::OnSolutionButtonClick(wxCommandEvent& event)
+{
+	maze_panel->ToggleSolutionState();
+	switch (maze_panel->GetSolutionState())
+	{
+		case true:
+			solution_button->SetLabel("Hide solution");
+			break;
+		case false:
+			solution_button->SetLabel("Show solution");
+			break;
+	}
+	maze_panel->SetCanvas(true, false);
 }
 
 void AppFrame::OnCenterButtonClick(wxCommandEvent& event)

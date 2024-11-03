@@ -10,6 +10,7 @@
 #define DOWN 2
 #define LEFT 3
 #define RIGHT 4
+#define PATH_CELL 5
 
 struct Position
 {
@@ -36,7 +37,7 @@ public:
     int GetPos(Position& to_get);
     void SetNewMaze(const uint32_t maze_size);
     void GenerateRandMaze();
-    void ComputeWallsToDraw();
+    void ComputeObjsToDraw();
 private:
     // Private members
     int to_shuffle[4] = { TOP, DOWN, LEFT, RIGHT };
@@ -57,4 +58,6 @@ private:
     int GetAdjacentCount(Position& coords);
     void VisitRandomNodes();
     void RemoveEndPointWalls(Position& end_point);
+    void ComputeWallsToDraw();
+    void ComputeCellsToMark();
 };

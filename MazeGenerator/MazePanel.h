@@ -11,6 +11,8 @@ public:
 	MazePanel(wxWindow* parent, MazeField* maze_field);
 	// Public methods
 	void SetCanvas(bool paint_maze, bool new_maze);
+	bool GetSolutionState();
+	void ToggleSolutionState();
 private:
 	// Private members
 	// Constants
@@ -19,7 +21,7 @@ private:
 	const int default_margin = 25;
 
 	// Drawing options
-	bool paint_maze, new_maze;
+	bool paint_maze, new_maze, show_solution;
 	
 	// Current state parameters
 	bool is_panning;
@@ -37,8 +39,8 @@ private:
 	
 	// Drawing methods
 	void RepaintMaze(wxPaintEvent& event);
-	void DrawWallsInCell(wxAutoBufferedPaintDC& canvas, wxPoint* top_left,
-		wxPoint* bot_right, int wall_value, Position& temp);
+	void DrawWallsInCell(wxAutoBufferedPaintDC& canvas, wxPoint& top_left,
+		wxPoint& bot_right, int wall_value, Position& temp, int cell_size);
 	void ClearCanvas(wxAutoBufferedPaintDC& canvas);
 	
 	// Event methods
@@ -48,6 +50,9 @@ private:
 	void OnMouseDrag(wxMouseEvent& event);
 
 	// Computation methods
+	bool IsInBox(wxPoint& point);
+	bool IsAnyPointInBox(wxPoint& top_left, wxPoint& top_right,
+		wxPoint& bot_left, wxPoint& bot_right);
 	int GetCellSize(wxAutoBufferedPaintDC& canvas);
 	void ResetDiff();
 	void SetStartPoint(int cell_size);
@@ -56,7 +61,6 @@ private:
 	void SetDraggedDiff(int& diff, int curr_mouse_pos, int last_cursor_pos);
 
 	// Mouse methods
-	bool IsInBox(wxPoint& point);
 	wxPoint GetMouseCanvasPos();
 	bool MouseInCanvas();
 

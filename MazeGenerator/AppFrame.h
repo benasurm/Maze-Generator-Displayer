@@ -31,6 +31,7 @@ private:
 	MazeField* maze_field;
 
 	void OnGenerateButtonClick(wxCommandEvent &event);
+	void OnSolutionButtonClick(wxCommandEvent &event);
 	void OnCenterButtonClick(wxCommandEvent& event);
 	wxDECLARE_EVENT_TABLE();
 };

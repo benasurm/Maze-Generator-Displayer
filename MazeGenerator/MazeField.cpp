@@ -2,6 +2,7 @@
 #include <codecvt>
 #include <locale>
 #include <cmath>
+#include <fstream>
 
 // Public method implementations
 
@@ -37,38 +38,10 @@ void MazeField::SetNewMaze(const uint32_t maze_size)
     while (!path_to_end.empty()) path_to_end.pop();
 }
 
-void MazeField::ComputeWallsToDraw()
+void MazeField::ComputeObjsToDraw()
 {
-    Position curr_pos, next_pos;
-    int opp_dir;
-    for (uint32_t y = 0; y < node_arr.size(); y++)
-    {
-        for (uint32_t x = 0; x < node_arr.size(); x++)
-        {
-            curr_pos.x = x;
-            curr_pos.y = y;
-            wall_arr[y][x] -= 1 << (node_arr[y][x] - 1);
-            for (int i = 1; i <= 4; i++)
-            {
-                if (i != node_arr[y][x])
-                {
-                    ComputeNextCoords(curr_pos, next_pos, i);
-                    if (AreCoordsInBounds(next_pos))
-                    {
-                        opp_dir = GetOppositeDir(i);
-                        if (opp_dir == node_arr[next_pos.y][next_pos.x])
-                        {
-                            wall_arr[y][x] -= 1 << (i - 1);
-                        }
-                    }
-                    else if (curr_pos.Equals(end))
-                    {
-                        RemoveEndPointWalls(end);
-                    }
-                }
-            }
-        }
-    }
+    ComputeWallsToDraw();
+    ComputeCellsToMark();
 }
 
 // Private method implementations
@@ -203,6 +176,7 @@ void MazeField::VisitRandomNodes()
     {
         node_arr[curr_pos.y][curr_pos.x] = RIGHT;
     }
+    path_to_end.push(start);
 
     while (visit_count < total_cells)
     {
@@ -212,7 +186,6 @@ void MazeField::VisitRandomNodes()
             {
                 end_reach = true;
             }
-            path_to_end.push(curr_pos);
         }
         ShuffleVisitOrder(to_shuffle, 4);
         any_adj = false;
@@ -226,6 +199,7 @@ void MazeField::VisitRandomNodes()
                 opp_dir = GetOppositeDir(to_shuffle[i]);
                 curr_pos.x = next_pos.x;
                 curr_pos.y = next_pos.y;
+                if(!end_reach) path_to_end.push(curr_pos);
                 node_arr[curr_pos.y][curr_pos.x] = opp_dir;
                 visit_count++;
                 break;
@@ -270,5 +244,50 @@ void MazeField::RemoveEndPointWalls(Position& end_point)
     {
         if (wall_arr[y][x] >= 1 << (RIGHT - 1))
             wall_arr[y][x] -= 1 << (RIGHT - 1);
+    }
+}
+
+void MazeField::ComputeWallsToDraw()
+{
+    Position curr_pos, next_pos;
+    int opp_dir;
+    for (uint32_t y = 0; y < node_arr.size(); y++)
+    {
+        for (uint32_t x = 0; x < node_arr.size(); x++)
+        {
+            curr_pos.x = x;
+            curr_pos.y = y;
+            wall_arr[y][x] -= 1 << (node_arr[y][x] - 1);
+            for (int i = 1; i <= 4; i++)
+            {
+                if (i != node_arr[y][x])
+                {
+                    ComputeNextCoords(curr_pos, next_pos, i);
+                    if (AreCoordsInBounds(next_pos))
+                    {
+                        opp_dir = GetOppositeDir(i);
+                        if (opp_dir == node_arr[next_pos.y][next_pos.x])
+                        {
+                            wall_arr[y][x] -= 1 << (i - 1);
+                        }
+                    }
+                    else if (curr_pos.Equals(end))
+                    {
+                        RemoveEndPointWalls(end);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void MazeField::ComputeCellsToMark()
+{
+    Position curr_pos;
+    while(!path_to_end.empty())
+    {
+        curr_pos = path_to_end.top();
+        wall_arr[curr_pos.y][curr_pos.x] += 1 << (PATH_CELL - 1);
+        path_to_end.pop();
     }
 }
