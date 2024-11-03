@@ -17,10 +17,15 @@ MazePanel::MazePanel(wxWindow* parent, MazeField* maze_field)
 	paint_maze = false;
 	new_maze = false;
 	is_panning = false;
-	this->maze_field = maze_field;
 	scale_factor = 1;
-	cursor_offset = new wxPoint((this->GetSize().x - 2 * default_margin) / 2, 
-		(this->GetSize().x - 2 * default_margin) / 2);
+	viewport_size = (this->GetSize().x - 2 * default_margin);
+	scaled_maze_size = viewport_size;
+	cursor_offset.x = viewport_size / 2;
+	cursor_offset.y = viewport_size / 2;
+	last_cursor_pos.x = cursor_offset.x;
+	last_cursor_pos.y = cursor_offset.y;
+	ResetDiff();
+	this->maze_field = maze_field;
 }
 
 void MazePanel::SetCanvas(bool paint_maze, bool new_maze)
@@ -41,12 +46,15 @@ void MazePanel::RepaintMaze(wxPaintEvent& event)
 	if (new_maze)
 	{
 		scale_factor = 1;
-		cursor_offset->x = (this->GetSize().x - 2 * default_margin) / 2;
-		cursor_offset->y = (this->GetSize().y - 2 * default_margin) / 2;
+		ResetDiff();
 	}
+	SetOffset(default_margin);
+	scaled_maze_size = viewport_size * scale_factor;
+	int cell_size = GetCellSize(canvas);
+	SetStartPoint(cell_size);
 
-	int canvas_size = (this->GetSize().x - 2 * default_margin);
-	int cell_size = GetCellSize(canvas, canvas_size);
+	cursor_offset.x = (scaled_maze_size) / 2 - diff.x * scale_factor;
+	cursor_offset.y = (scaled_maze_size) / 2 - diff.y * scale_factor;
 
 	Position temp;
 	wxPoint top_left, bot_right;
@@ -65,69 +73,69 @@ void MazePanel::RepaintMaze(wxPaintEvent& event)
 			top_left.x = x * cell_size;
 			top_left.y = y * cell_size;
 
-			bot_right.x = (x + 1) * cell_size;
-			bot_right.y = (y + 1) * cell_size;
+			bot_right.x = top_left.x + cell_size;
+			bot_right.y = top_left.y + cell_size;
 
-			DrawWallsInCell(canvas, &top_left, &bot_right, wall_value, canvas_size, temp);
+			DrawWallsInCell(canvas, &top_left, &bot_right, wall_value, temp);
 		}
 	}
 }
 
 void MazePanel::DrawWallsInCell(wxAutoBufferedPaintDC& canvas, wxPoint* top_left,
-	wxPoint* bot_right, int wall_value, int canvas_size, Position& temp)
+	wxPoint* bot_right, int wall_value, Position& temp)
 {
 	wxPoint from, to;
 	wxPoint box_top_left_pos;
-	box_top_left_pos.x = (cursor_offset->x - canvas_size / 2);
-	box_top_left_pos.y = (cursor_offset->y - canvas_size / 2);
+	box_top_left_pos.x = (cursor_offset.x - viewport_size / 2);
+	box_top_left_pos.y = (cursor_offset.y - viewport_size / 2);
 	if ((wall_value & (1 << (RIGHT - 1)))
-		&& IsInBox(*bot_right, canvas_size))
+		&& IsInBox(*bot_right))
 	{
-		from.x = bot_right->x - box_top_left_pos.x + default_margin;
+		from.x = bot_right->x - box_top_left_pos.x + start_point.x;
 		to.x = from.x;
 
-		from.y = std::max(cursor_offset->y - canvas_size / 2, top_left->y)
-			- box_top_left_pos.y + default_margin;
-		to.y = std::min(cursor_offset->y + canvas_size / 2, bot_right->y)
-			- box_top_left_pos.y + default_margin;
+		from.y = std::max(cursor_offset.y - viewport_size / 2, top_left->y)
+			- box_top_left_pos.y + start_point.y;
+		to.y = std::min(cursor_offset.y + viewport_size / 2, bot_right->y)
+			- box_top_left_pos.y + start_point.y;
 
 		canvas.DrawLine(from, to);
 	}
 	if (wall_value & (1 << (LEFT - 1))
-		&& IsInBox(*top_left, canvas_size) && temp.x == 0)
+		&& IsInBox(*top_left) && temp.x == 0)
 	{
-		from.x = top_left->x - box_top_left_pos.x + default_margin;
+		from.x = top_left->x - box_top_left_pos.x + start_point.x;
 		to.x = from.x;
 
-		from.y = std::max(cursor_offset->y - canvas_size / 2, top_left->y)
-			- box_top_left_pos.y + default_margin;
-		to.y = std::min(cursor_offset->y + canvas_size / 2, bot_right->y)
-			- box_top_left_pos.y + default_margin;
+		from.y = std::max(cursor_offset.y - viewport_size / 2, top_left->y)
+			- box_top_left_pos.y + start_point.y;
+		to.y = std::min(cursor_offset.y + viewport_size / 2, bot_right->y)
+			- box_top_left_pos.y + start_point.y;
 
 		canvas.DrawLine(from, to);
 	}
 	if (wall_value & (1 << (DOWN - 1))
-		&& IsInBox(*bot_right, canvas_size))
+		&& IsInBox(*bot_right))
 	{
-		from.x = std::max(cursor_offset->x - canvas_size / 2, top_left->x)
-			- box_top_left_pos.x + default_margin;
-		to.x = std::min(cursor_offset->x + canvas_size / 2, bot_right->x)
-			- box_top_left_pos.x + default_margin;
+		from.x = std::max(cursor_offset.x - viewport_size / 2, top_left->x)
+			- box_top_left_pos.x + start_point.x;
+		to.x = std::min(cursor_offset.x + viewport_size / 2, bot_right->x)
+			- box_top_left_pos.x + start_point.x;
 
-		from.y = bot_right->y - box_top_left_pos.y + default_margin;
+		from.y = bot_right->y - box_top_left_pos.y + start_point.y;
 		to.y = from.y;
 
 		canvas.DrawLine(from, to);
 	}
 	if (wall_value & (1 << (TOP - 1))
-		&& IsInBox(*top_left, canvas_size) && temp.y == 0)
+		&& IsInBox(*top_left) && temp.y == 0)
 	{		
-		from.x = std::max(cursor_offset->x - canvas_size / 2, top_left->x)
-			- box_top_left_pos.x + default_margin;
-		to.x = std::min(cursor_offset->x + canvas_size / 2, bot_right->x)
-			- box_top_left_pos.x + default_margin;
+		from.x = std::max(cursor_offset.x - viewport_size / 2, top_left->x)
+			- box_top_left_pos.x + start_point.x;
+		to.x = std::min(cursor_offset.x + viewport_size / 2, bot_right->x)
+			- box_top_left_pos.x + start_point.x;
 
-		from.y = top_left->y - box_top_left_pos.y + default_margin;
+		from.y = top_left->y - box_top_left_pos.y + start_point.y;
 		to.y = from.y;
 
 		canvas.DrawLine(from, to);
@@ -140,18 +148,53 @@ void MazePanel::ClearCanvas(wxAutoBufferedPaintDC& canvas)
 	canvas.Clear();
 }
 
-int MazePanel::GetCellSize(wxAutoBufferedPaintDC& canvas, int canvas_size)
+void MazePanel::ResetDiff()
 {
-	int n = maze_field->GetSize();
-	return canvas_size * scale_factor / n;
+	diff.x = diff.y = 0;
 }
 
-bool MazePanel::IsInBox(wxPoint& point, int canvas_size)
+int MazePanel::GetCellSize(wxAutoBufferedPaintDC& canvas)
 {
-	return point.x >= cursor_offset->x - canvas_size / 2
-		&& point.x <= cursor_offset->x + canvas_size / 2
-		&& point.y >= cursor_offset->y - canvas_size / 2
-		&& point.y <= cursor_offset->y + canvas_size / 2;
+	int n = maze_field->GetSize();
+	return scaled_maze_size / n;
+}
+
+void MazePanel::SetStartPoint(int cell_size)
+{
+	if (scale_factor <= 1)
+	{
+		int round_maze_len = cell_size * maze_field->GetSize();
+		int offset = ((viewport_size + 2 * default_margin) - round_maze_len) / 2;
+		SetOffset(offset);
+	}
+}
+
+void MazePanel::SetOffset(int margin)
+{
+	start_point.x = start_point.y = margin;
+}
+
+void MazePanel::ClampDiff(int& diff)
+{
+	int diff_bound = (scaled_maze_size - viewport_size) / (2 * scale_factor);
+	if (diff > diff_bound)
+	{
+		diff = diff_bound;
+	}
+	else if (diff < (-1 * diff_bound))
+	{
+		diff = (- 1 * diff_bound);
+	}
+}
+
+void MazePanel::SetDraggedDiff(int& diff, int curr_mouse_pos, int last_cursor_pos)
+{
+	int delta = diff * scale_factor + (curr_mouse_pos - last_cursor_pos);
+	if (delta <= (scaled_maze_size - viewport_size) / 2 &&
+		delta >= (viewport_size - scaled_maze_size) / 2)
+	{
+		diff += (curr_mouse_pos - last_cursor_pos);
+	}
 }
 
 void MazePanel::OnZoom(wxMouseEvent& event)
@@ -159,9 +202,17 @@ void MazePanel::OnZoom(wxMouseEvent& event)
 	if (!MouseInCanvas()) return;
 	double update = 0.1;
 	if (event.GetWheelRotation() < 0) update *= -1;
-	if ((update < 0 && scale_factor > 0.8) || (update > 0 && scale_factor < 3))
-	{
+	if ((update < 0 && scale_factor > 1) || (update > 0 && scale_factor < 3))
+	{		
 		scale_factor += update;
+		int scaled_maze_size = (viewport_size) * scale_factor;
+
+		if (scaled_maze_size > viewport_size)
+		{
+			ClampDiff(diff.x);
+			ClampDiff(diff.y);
+		}
+		else ResetDiff();
 		SetCanvas(true, false);
 	}
 }
@@ -182,20 +233,30 @@ void MazePanel::OnMouseRelease(wxMouseEvent& event)
 
 void MazePanel::OnMouseDrag(wxMouseEvent& event)
 {
-	if (is_panning && MouseInCanvas())
+	if (is_panning)
 	{
 		wxPoint curr_mouse_pos = GetMouseCanvasPos();
-		wxPoint diff = curr_mouse_pos - last_cursor_pos;
-
-		int canvas_size = (this->GetSize().x - 2 * default_margin);
-		int scaled_canvas_size = canvas_size * scale_factor;
-
-		cursor_offset->x = std::clamp(cursor_offset->x - diff.x, 200, scaled_canvas_size - 200);
-		cursor_offset->y = std::clamp(cursor_offset->y - diff.y, 200, scaled_canvas_size - 200);
+		wxPoint delta;
+		int scaled_maze_size = (viewport_size) * scale_factor;
+		
+		if (scaled_maze_size > viewport_size)
+		{
+			SetDraggedDiff(diff.x, curr_mouse_pos.x, last_cursor_pos.x);
+			SetDraggedDiff(diff.y, curr_mouse_pos.y, last_cursor_pos.y);
+		}
+		else ResetDiff();
 		last_cursor_pos = curr_mouse_pos;
-
 		SetCanvas(true, false);
 	}
+}
+
+bool MazePanel::IsInBox(wxPoint& point)
+{
+	int half_viewport = (viewport_size / 2);
+	return point.x >= cursor_offset.x - half_viewport
+		&& point.x <= cursor_offset.x + half_viewport
+		&& point.y >= cursor_offset.y - half_viewport
+		&& point.y <= cursor_offset.y + half_viewport;
 }
 
 wxPoint MazePanel::GetMouseCanvasPos()
